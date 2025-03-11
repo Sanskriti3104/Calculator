@@ -56,8 +56,8 @@ body {
     color: white;
 }
 
-.operator {
-    background-color: #FF9500;
+.operator, #decimal, #equal, #changeSign {
+    background-color: #ff9500;
     color: white;
 }
 
