@@ -56,7 +56,7 @@ body {
     color: white;
 }
 
-.operator, #decimal, #equal, #changeSign {
+.operator, #decimal, #equal, #toggleSign {
     background-color: #ff9500;
     color: white;
 }
