@@ -10,23 +10,50 @@ const equal = document.getElementById("equal");
 let operand1 = "";
 let operand2 = "";
 let operator = "";
-let btnClicked = false;
+let btnClicked = false;     // Tracks if an operator or equal button was last clicked
+let activeOperator = null;  // Track the currently active operator button
 
-// Add event listener to all clear button
-allClear.addEventListener("click", function () {
-    displayBoard.innerText = 0;
+// Function to update the display
+function updateDisplay(value) {
+    displayBoard.innerText = value;
+}
+
+// Function to reset calculator
+function resetCalculator() {
     operand1 = "";
-    operator = ""
     operand2 = "";
+    operator = "";
     btnClicked = false;
-});
+    updateDisplay(0);
+    removeActiveOperator();
+}
 
-// Add event listener to clear button 
+// Function to remove the active class from the operator button
+function removeActiveOperator() {
+    if (activeOperator) {
+        activeOperator.classList.remove("active");
+        activeOperator = null;
+    }
+}
+
+// Event listener for all-clear button
+allClear.addEventListener("click", resetCalculator);
+
+// Event listener for clear button 
 clear.addEventListener("click", () => {
     if (operator && !operand2) {
         operator = "";
-    } else {
-        displayBoard.innerText = displayBoard.innerText.slice(0, -1) || "0";
+        removeActiveOperator();
+    } else if(displayBoard.innerText == "Error"){
+        updateDisplay(0);
+    }else {
+        if(displayBoard.innerText < 0){
+            let val = -displayBoard.innerText;
+            val = Math.floor(val / 10) || 0;
+            updateDisplay(-val);
+        }else{
+            updateDisplay(displayBoard.innerText.slice(0, -1) || "0");
+        }
         syncOperand();
     }
 });
@@ -34,7 +61,7 @@ clear.addEventListener("click", () => {
 // Add event listener to toggle sign button 
 toggleSign.addEventListener("click", () => {
     if (operator && !operand2) return;
-    displayBoard.innerText = -displayBoard.innerText;
+    updateDisplay(-displayBoard.innerText);
     syncOperand();
 });
 
@@ -42,25 +69,50 @@ toggleSign.addEventListener("click", () => {
 function syncOperand() {
     if (operand1 && operator) {
         operand2 = displayBoard.innerText;
-    } else if (operator === "") {
+    } else if (!operator) {
         operand1 = displayBoard.innerText;
     }
 }
 
-// Add event listeners to digits
-for (let digit of digits) {
-    digit.addEventListener("click", display);
+// Event listeners for operators
+operators.forEach(op => op.addEventListener("click", assign));
+
+// Assign operator and set active class
+function assign() {
+
+    if (!operand1) operand1 = displayBoard.innerText;
+    if (operand2) operate();
+
+    operator = this.innerText;
+    btnClicked = true;
+
+    removeActiveOperator();
+    this.classList.add("active");
+    activeOperator = this;
 }
 
-// Add event listeners to operators
-for (let op of operators) {
-    op.addEventListener("click", assign);
+// Event listeners for digits
+digits.forEach(digit => digit.addEventListener("click", display));
+
+// Function to handle digit button clicks
+function display() {
+    if (btnClicked) {
+        if (!operator)   operand1 = "";
+        updateDisplay(this.innerText);
+        btnClicked = false;
+    } else {
+       updateDisplay(displayBoard.innerText === "0" ? this.innerText : displayBoard.innerText + this.innerText);
+    }
+
+    if (operator) {
+        operand2 = operand2 === "" ? this.innerText : operand2 + this.innerText;
+        removeActiveOperator();
+    }
 }
 
-// Add event listeners to decimal button
+// Event listeners for decimal button
 decimal.addEventListener("click", () => {
     if (btnClicked) {
-        // If user clicks "." after "=", append decimal to the result instead of resetting
         if (!displayBoard.innerText.includes(".")) {
             displayBoard.innerText += ".";
         }
@@ -71,14 +123,14 @@ decimal.addEventListener("click", () => {
     syncOperand();
 });
 
-
-// Add event listener to equal button
+// Event listener for equal button
 equal.addEventListener("click", operate);
 
+// Function to perform the calculation
 function operate() {
+    removeActiveOperator();
 
     if (operand1 && operator) {
-
         if (!operand2) operand2 = "0";
 
         let num1 = parseFloat(operand1);
@@ -86,57 +138,17 @@ function operate() {
         let result = 0;
 
         switch (operator) {
-            case "+":
-                result = num1 + num2;
-                break;
-            case "-":
-                result = num1 - num2;
-                break;
-            case "*":
-                result = num1 * num2;
-                break;
-            case "/":
-                result = num2 !== 0 ? num1 / num2 : "Error";
-                break;
-            default:
-                break;
+            case "+":   result = num1 + num2;  break;
+            case "-":   result = num1 - num2;  break;
+            case "*":   result = num1 * num2;  break;
+            case "/":   result = num2 !== 0 ? num1 / num2 : "Error";    break;
+            default:    break;
         }
 
-        displayBoard.innerText = result;
+        updateDisplay(result);
         operand1 = result;
-        operator = "";
         operand2 = "";
+        operator = "";
         btnClicked = true;
-    }
-}
-
-function assign() {
-
-    if (operand1 === "") operand1 = displayBoard.innerText;
-
-    if (operand2 !== "") operate();
-
-    operator = this.innerText;
-    btnClicked = true;
-
-}
-
-function display() {
-    if (btnClicked) {
-        // If '=' was pressed and a digit is clicked, reset only if no operator is active
-        if (operator === "") {
-            operand1 = "";
-        }
-        displayBoard.innerText = this.innerText;
-        btnClicked = false;
-    } else {
-        // Append digits normally
-        displayBoard.innerText = displayBoard.innerText === "0" ? this.innerText : displayBoard.innerText + this.innerText;
-    }
-
-    // If an operator is active, update operand2 instead of replacing it
-    if (operator !== "") {
-        operand2 = operand2 === "" ? this.innerText : operand2 + this.innerText;
-        console.log("op2 : " + operand2);
     }
 }
