@@ -21,6 +21,13 @@ function removeActiveOperator() {
     }
 }
 
+function fixPrecision(value, precision = 5) {
+    if (value === 0) return "0";
+    return Math.abs(value) < 1e-5 
+        ? value.toExponential(precision)  // Use scientific notation for very small numbers
+        : parseFloat(value.toFixed(precision));  // Convert to fixed decimal places
+}
+
 // Event listener for all-clear button
 allClear.addEventListener("click", () => {
     displayBoard.innerText = 0;
@@ -106,10 +113,10 @@ function operate() {
         let result = 0;
         
         switch (operator) {
-            case "+":   result = num1 + num2;  break;
-            case "-":   result = num1 - num2;  break;
-            case "*":   result = num1 * num2;  break;
-            case "/":   result = num2 !== 0 ? num1 / num2 : "Error";    break;
+            case "+":   result = fixPrecision(num1 + num2);  break;
+            case "-":   result = fixPrecision(num1 - num2);  break;
+            case "*":   result = fixPrecision(num1 * num2, 5);  break;
+            case "/":   result = num2 !== 0 ? fixPrecision(num1 / num2, 5) : "Error"; break;
             default:    break;
         }
         
