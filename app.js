@@ -13,6 +13,15 @@ let operator = "";
 let btnClicked = false;     // Tracks if an operator or equal button was last clicked
 let activeOperator = null;  // Track the currently active operator button
 
+function updateDisplay(value) {
+    if (value.length >= 16) return;
+    if (Math.abs(value) >= 1e15 || (Math.abs(value) < 1e-5 && value != 0)) {
+        value = parseFloat(value).toExponential(5); 
+    }
+    displayBoard.innerText = value.toString();
+    // displayBoard.innerText = value;
+}
+
 // Function to remove the active class from the operator button
 function removeActiveOperator() {
     if (activeOperator) {
@@ -23,14 +32,21 @@ function removeActiveOperator() {
 
 function fixPrecision(value, precision = 5) {
     if (value === 0) return "0";
-    return Math.abs(value) < 1e-5 
-        ? value.toExponential(precision)  // Use scientific notation for very small numbers
-        : parseFloat(value.toFixed(precision));  // Convert to fixed decimal places
+    // return Math.abs(value) < 1e-5
+    //     ? value.toExponential(precision)  // Use scientific notation for very small numbers
+    //     : parseFloat(value.toFixed(precision));  // Convert to fixed decimal places
+    // Use scientific notation for very large or very small numbers
+    if (Math.abs(value) >= 1e16 || Math.abs(value) < 1e-5) {
+        return value.toExponential(precision);
+    } else {
+        // Convert to fixed decimal places for regular numbers
+        return parseFloat(value.toFixed(precision)).toString();
+    }
 }
 
 // Event listener for all-clear button
 allClear.addEventListener("click", () => {
-    displayBoard.innerText = 0;
+    updateDisplay("0");
     operand1 = "";
     console.log("op 1:" + operand1);
     operand2 = "";
@@ -47,15 +63,15 @@ clear.addEventListener("click", () => {
         operator = "";
         console.log("op :" + operator);
         removeActiveOperator();
-    } else if(displayBoard.innerText == "Error"){
-       displayBoard.innerText = 0;
-    }else {
-        if(displayBoard.innerText < 0){
+    } else if (displayBoard.innerText == "Error") {
+        updateDisplay("0");
+    } else {
+        if (displayBoard.innerText < 0) {
             let val = -displayBoard.innerText;
             val = Math.floor(val / 10) || 0;
-            displayBoard.innerText = -val;
-        }else{
-            displayBoard.innerText = displayBoard.innerText.slice(0, -1) || "0";
+            updateDisplay((-val).toString());
+        } else {
+            updateDisplay(displayBoard.innerText.slice(0, -1) || "0");
         }
         syncOperand();
     }
@@ -64,7 +80,7 @@ clear.addEventListener("click", () => {
 // Add event listener to toggle sign button 
 toggleSign.addEventListener("click", () => {
     if (operator && !operand2) return;
-    displayBoard.innerText = -displayBoard.innerText;
+    updateDisplay((-displayBoard.innerText).toString());
     syncOperand();
 });
 
@@ -74,7 +90,7 @@ function syncOperand() {
         operand2 = displayBoard.innerText;
         console.log("op2 " + operand2);
     } else if (!operator) {
-        operand1 = displayBoard.innerText;
+        operand1 = displayBoard.innerText === "0" ? "" : displayBoard.innerText;
         console.log("op1 " + operand1);
     }
 }
@@ -87,15 +103,10 @@ operators.forEach(op => op.addEventListener("click", assign));
 
 // Event listeners for decimal button
 decimal.addEventListener("click", () => {
-    if (btnClicked) {
-        if (!displayBoard.innerText.includes(".")) {
-            displayBoard.innerText += ".";
-        }
-        btnClicked = false;
-    } else if (!displayBoard.innerText.includes(".")) {
-        displayBoard.innerText += ".";
+    if (!displayBoard.innerText.includes(".")) {
+        updateDisplay(displayBoard.innerText + ".");
     }
-    if(operand1 && operator)    syncOperand();
+    syncOperand();
 });
 
 // Event listener for equal button
@@ -104,28 +115,28 @@ equal.addEventListener("click", operate);
 // Function to perform the calculation
 function operate() {
     removeActiveOperator();
-    
+
     if (operand1 && operator) {
         if (!operand2) operand2 = "0";
-        
+
         let num1 = parseFloat(operand1);
         let num2 = parseFloat(operand2);
         let result = 0;
-        
+
         switch (operator) {
-            case "+":   result = fixPrecision(num1 + num2);  break;
-            case "-":   result = fixPrecision(num1 - num2);  break;
-            case "*":   result = fixPrecision(num1 * num2, 5);  break;
-            case "/":   result = num2 !== 0 ? fixPrecision(num1 / num2, 5) : "Error"; break;
-            default:    break;
+            case "+": result = fixPrecision(num1 + num2); break;
+            case "-": result = fixPrecision(num1 - num2); break;
+            case "*": result = fixPrecision(num1 * num2, 5); break;
+            case "/": result = num2 !== 0 ? fixPrecision(num1 / num2, 5) : "Error"; break;
+            default: break;
         }
-        
-        displayBoard.innerText = result;
-        console.log("res:" +result);
+
+        updateDisplay(result.toString());
+        console.log("res:" + result);
         operand1 = result;
-        console.log("op1:" +operand1);
+        console.log("op1:" + operand1);
         operand2 = "";
-        console.log("op2:" +operand2);
+        console.log("op2:" + operand2);
         operator = "";
         console.log("op:" + operator);
         btnClicked = true;
@@ -135,10 +146,10 @@ function operate() {
 // Assign operator and set active class
 function assign() {
 
-    if (!operand1){
+    if (!operator) {
         operand1 = displayBoard.innerText;
-        console.log("op1:"+ operand1);
-    } 
+        console.log("op1:" + operand1);
+    }
     if (operand2) operate();
 
     operator = this.innerText;
@@ -153,17 +164,14 @@ function assign() {
 // Function to handle digit button clicks
 function display() {
     if (btnClicked) {
-        if (!operator) {
-            operand1 = "";
-            console.log("op1 :" + operand1);
-        }
-        displayBoard.innerText = this.innerText;
+        updateDisplay(this.innerText);
         btnClicked = false;
     } else {
-        displayBoard.innerText = displayBoard.innerText === "0" ? this.innerText : displayBoard.innerText + this.innerText;
+        if (displayBoard.innerText.length >= 16) return;
+        updateDisplay(displayBoard.innerText === "0" ? this.innerText : displayBoard.innerText + this.innerText);
     }
-
     if (operator) {
+        if (operand2.length >= 16) return;
         operand2 = operand2 === "" ? this.innerText : operand2 + this.innerText;
         console.log("op2:" + operand2);
         removeActiveOperator();
