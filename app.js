@@ -19,7 +19,6 @@ function updateDisplay(value) {
         value = parseFloat(value).toExponential(5); 
     }
     displayBoard.innerText = value.toString();
-    // displayBoard.innerText = value;
 }
 
 // Function to remove the active class from the operator button
@@ -32,10 +31,6 @@ function removeActiveOperator() {
 
 function fixPrecision(value, precision = 5) {
     if (value === 0) return "0";
-    // return Math.abs(value) < 1e-5
-    //     ? value.toExponential(precision)  // Use scientific notation for very small numbers
-    //     : parseFloat(value.toFixed(precision));  // Convert to fixed decimal places
-    // Use scientific notation for very large or very small numbers
     if (Math.abs(value) >= 1e16 || Math.abs(value) < 1e-5) {
         return value.toExponential(precision);
     } else {
