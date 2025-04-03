@@ -16,11 +16,11 @@ let decimalJustPressed = false; // Track if decimal was just pressed
 
 // Function to update display board 
 function updateDisplay(value) {
-    if (value.length >= 16) return;
-    if (Math.abs(value) >= 1e15 || (Math.abs(value) < 1e-5 && value != 0)) {
+    value = value.toString(); 
+    if (value.length > 16) { 
         value = parseFloat(value).toExponential(5); 
     }
-    displayBoard.innerText = value.toString();
+    displayBoard.innerText = value; 
 }
 
 // Function to remove the active class from the operator button
@@ -46,10 +46,8 @@ function fixPrecision(value, precision = 5) {
 function syncOperand() {
     if (operand1 && operator) {
         operand2 = displayBoard.innerText;
-        console.log("op2 " + operand2);
     } else if (!operator) {
         operand1 = displayBoard.innerText === "0" ? "" : displayBoard.innerText;
-        console.log("op1 " + operand1);
     }
 }
 
@@ -57,11 +55,8 @@ function syncOperand() {
 allClear.addEventListener("click", () => {
     updateDisplay("0");
     operand1 = "";
-    console.log("op 1:" + operand1);
     operand2 = "";
-    console.log("op 2:" + operand2);
     operator = "";
-    console.log("op :" + operator);
     btnClicked = false;
     decimalJustPressed = false;
     removeActiveOperator();
@@ -71,7 +66,6 @@ allClear.addEventListener("click", () => {
 clear.addEventListener("click", () => {
     if (operator && !operand2) {
         operator = "";
-        console.log("op :" + operator);
         removeActiveOperator();
     } else if (displayBoard.innerText == "Error") {
         updateDisplay("0");
@@ -135,13 +129,9 @@ function operate() {
         }
 
         updateDisplay(result.toString());
-        console.log("res:" + result);
         operand1 = result;
-        console.log("op1:" + operand1);
         operand2 = "";
-        console.log("op2:" + operand2);
         operator = "";
-        console.log("op:" + operator);
         btnClicked = true;
         decimalJustPressed = false;
     }
@@ -151,12 +141,10 @@ function operate() {
 function assign() {
     if (!operator) {
         operand1 = displayBoard.innerText;
-        console.log("op1:" + operand1);
     }
     if (operand2) operate();
 
     operator = this.innerText;
-    console.log("op:" + operator);
     btnClicked = true;
     decimalJustPressed = false;
 
@@ -183,11 +171,7 @@ function display() {
     if (operator) {
         if (operand2.length >= 16) return;
         operand2 = operand2 === "" ? this.innerText : operand2 + this.innerText;
-        console.log("op2:" + operand2);
         removeActiveOperator();
-    } else {
-        operand1 = displayBoard.innerText;
-        console.log("op1:" + operand1);
     }
     decimalJustPressed = false;
 }
